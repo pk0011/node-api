@@ -7,10 +7,25 @@ const mongoose = require('mongoose');
 //Fetching all products
 router.get('/',(req, res, next) => {
     Product.find()
+    .select("name _id")
     .exec()
     .then(doc => {
         console.log(doc)
-        res.status(200).json(doc)
+        const response = {
+            count : doc.length,
+            products: doc.map(doc => {
+                return {
+                    name: doc.name,
+                    price: doc.price,
+                    id: doc._id,
+                    request:{
+                        type : "GET",
+                        url: "http://localhost:8001/products/"+doc._id
+                    }
+                }
+            })
+        }
+        res.status(200).json(response)
     })
     .catch(err => {
         console.log(err)
@@ -46,10 +61,7 @@ router.get('/:productID',(req, res, next) => {
 
 //create a new entry with POST
 router.post('/',(req, res, next) => {
-    // const product = {
-    //     name: req.body.name,
-    //     price: req.body.price
-    // }
+    
     const product = new Product({
         _id: mongoose.Types.ObjectId(),
         name: req.body.name,
@@ -57,6 +69,13 @@ router.post('/',(req, res, next) => {
     })
     product.save().then(result => {
         console.log(result);
+        res.status(200).json({
+            success: true,
+            message: "signup success",
+            data:{
+                id : product._id
+            }
+        })
     })
     .catch(err => {
         console.log(err)
